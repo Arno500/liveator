@@ -18,7 +18,7 @@ const sceneRegex = /(?<capacity>\d+)-(?<probability>\d+)-(?<name>.*)/
 const placeholderRegex = /(?<index>\d+)-(?<volume>\d+(.\d+)?)-(?<name>.*)/
 const textRegex = /(?<index>\d+)-(?<name>.*)/
 
-setInterval(TWEEN.update, 1000 / 60)
+setInterval(TWEEN.update, 1000 / 30)
 
 class StreamManager extends EventEmitter {
     constructor() {
@@ -87,12 +87,16 @@ class StreamManager extends EventEmitter {
 
     /**
      * This function is used to set the text of a template
-     * @param {*} key The name of the templated text (after the "template-" prefix)" 
+     * @param {*} key The name of the templated text (after the "template-" prefix)
      * @param {*} value The text to insert
      * @returns {Promise}
      */
     async setText(key, value) {
-        await obs.call("SetInputSettings", { inputSettings: { text: value }, inputName: "templated-" + key })
+        try {
+            await obs.call("SetInputSettings", { inputSettings: { text: String(value) }, inputName: "templated-" + key })
+        } catch (err) {
+            console.error("An error occured while setting the text of the text template. Does the template exist?\n", err)
+        }
     }
 }
 

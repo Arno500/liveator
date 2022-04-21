@@ -3,6 +3,7 @@ import { setupCatchExit } from "catch-exit"
 import { initializeDiscord } from "./discord/index.mjs"
 
 import { initOBSRemote } from "./obs/index.mjs"
+import { initTwitch } from "./twitch/index.mjs"
 
 dotEnvSetup()
 setupCatchExit()
@@ -16,5 +17,5 @@ async function startOBS() {
     }
 }
 
-startOBS()
-initializeDiscord()
+await Promise.all([await startOBS(), !process.env.DISCORD_DISABLE && await initializeDiscord()])
+initTwitch()
