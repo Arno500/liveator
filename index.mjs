@@ -17,4 +17,4 @@ async function startOBS() {
 }
 
 startOBS()
-// initializeDiscord()
+initializeDiscord()
