@@ -58,12 +58,7 @@ const getTagsInfo = async (tags) => {
             tag_id
         }
     }).json()
-    /**TODO: change to map*/
-    const tagsArray = []
-    res.data.forEach(tag => {
-        tagsArray.push({ name: tag.localization_names['en-us'], description: tag.localization_descriptions['en-us'] })
-    })
-    return tagsArray
+    return res.data.map(tag => ({ name: tag.localization_names['en-us'], description: tag.localization_descriptions['en-us'] }))
 }
 
 export const initTwitch = async () => {
