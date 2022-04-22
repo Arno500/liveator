@@ -1,13 +1,15 @@
 import got from 'got'
 import { streamStartEmbed } from '../discord/messages.mjs'
-import streamManager from '../obs/index.mjs'
+import streamManager, { StreamEvents } from '../obs/index.mjs'
 
 let accessToken
 let latestFollower
 
-const headers = {
-    Authorization: `Bearer ${accessToken}`,
-    "Client-Id": process.env.TWITCH_CLIENT
+const getHeaders = () => {
+    return {
+        Authorization: `Bearer ${accessToken}`,
+        "Client-Id": process.env.TWITCH_CLIENT
+    }
 }
 
 const refreshToken = async () => {
@@ -32,7 +34,7 @@ const checkTokenValidity = async () => {
 
 const getFollowersInfo = async () => {
     const res = await got.get(`https://api.twitch.tv/helix/users/follows`, {
-        headers,
+        headers: getHeaders(),
         searchParams: {
             to_id: process.env.TWITCH_ID
         }
@@ -42,7 +44,7 @@ const getFollowersInfo = async () => {
 
 const getStreamInfo = async () => {
     const res = await got.get('https://api.twitch.tv/helix/streams', {
-        headers,
+        headers: getHeaders(),
         searchParams: {
             user_id: process.env.TWITCH_ID
         }
@@ -51,14 +53,12 @@ const getStreamInfo = async () => {
 }
 
 const getTagsInfo = async (tags) => {
-    const tag_id = tags.map(tag => `tag_id=${tag}`).join('&')
+    const searchParams = new URLSearchParams([tags.map(tag => { "tag_id", tag })])
     const res = await got.get('https://api.twitch.tv/helix/tags/streams', {
-        headers,
-        searchParams: {
-            tag_id
-        }
+        headers: getHeaders(),
+        searchParams
     }).json()
-    return res.data.map(tag => ({ name: tag.localization_names['en-us'], description: tag.localization_descriptions['en-us'] }))
+    return res.data.map(tag => ({ name: tag.localization_names['en-us'] }))
 }
 
 export const initTwitch = async () => {
@@ -90,7 +90,7 @@ export const initTwitch = async () => {
             }
         }
     }, 1000)
-    streamManager.on('start', async () => {
+    streamManager.on(StreamEvents.StreamStart, async () => {
         let streamInfo
         try {
             streamInfo = await getStreamInfo()
