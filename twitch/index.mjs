@@ -1,8 +1,16 @@
 import got from 'got'
-import streamManager from '../obs/index.mjs'
+import { streamStartEmbed } from '../discord/messages.mjs'
+import streamManager, { StreamEvents } from '../obs/index.mjs'
 
 let accessToken
 let latestFollower
+
+const getHeaders = () => {
+    return {
+        Authorization: `Bearer ${accessToken}`,
+        "Client-Id": process.env.TWITCH_CLIENT
+    }
+}
 
 const refreshToken = async () => {
     const res = await got.post('https://id.twitch.tv/oauth2/token', {
@@ -26,15 +34,31 @@ const checkTokenValidity = async () => {
 
 const getFollowersInfo = async () => {
     const res = await got.get(`https://api.twitch.tv/helix/users/follows`, {
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Client-Id": process.env.TWITCH_CLIENT
-        },
+        headers: getHeaders(),
         searchParams: {
             to_id: process.env.TWITCH_ID
         }
     }).json()
     return { latestFollower: res.data[0].from_name, totalFollowers: res.total }
+}
+
+const getStreamInfo = async () => {
+    const res = await got.get('https://api.twitch.tv/helix/streams', {
+        headers: getHeaders(),
+        searchParams: {
+            user_id: process.env.TWITCH_ID
+        }
+    }).json()
+    return { title: res.data[0].title, username: res.data[0].user_name, game: res.data[0].game_name, viewers: res.data[0].viewer_count, thumbnail: res.data[0].thumbnail_url, startedAt: res.data[0].started_at, tags: res.data[0].tag_ids }
+}
+
+const getTagsInfo = async (tags) => {
+    const searchParams = new URLSearchParams([tags.map(tag => { "tag_id", tag })])
+    const res = await got.get('https://api.twitch.tv/helix/tags/streams', {
+        headers: getHeaders(),
+        searchParams
+    }).json()
+    return res.data.map(tag => ({ name: tag.localization_names['en-us'] }))
 }
 
 export const initTwitch = async () => {
@@ -66,4 +90,18 @@ export const initTwitch = async () => {
             }
         }
     }, 1000)
+    streamManager.on(StreamEvents.StreamStart, async () => {
+        let streamInfo
+        try {
+            streamInfo = await getStreamInfo()
+        } catch (err) {
+            console.error('Error occured during stream information fetching', err)
+        }
+        try {
+            streamInfo.tags = await getTagsInfo(streamInfo.tags)
+        } catch (err) {
+            console.error('Error occured during tags information fetching', err)
+        }
+        streamStartEmbed(streamInfo)
+    })
 }
