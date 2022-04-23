@@ -1,0 +1,8 @@
+.hidden {
+    display: none;
+}
+
+.content {
+    transform: rotate(45deg);
+    font-family: 'Poppins', sans-serif;
+}

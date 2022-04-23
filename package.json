@@ -19,6 +19,7 @@
     "got": "^12.0.3",
     "libsodium-wrappers": "^0.7.10",
     "obs-websocket-js": "^5.0.0-beta.1",
-    "tree-kill": "^1.2.2"
+    "tree-kill": "^1.2.2",
+    "ws": "^8.5.0"
   }
 }

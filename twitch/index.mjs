@@ -1,6 +1,7 @@
 import got from 'got'
 import { streamStartEmbed } from '../discord/messages.mjs'
 import streamManager, { StreamEvents } from '../obs/index.mjs'
+import { sendFollowEvent } from '../server/index.mjs'
 
 let accessToken
 let latestFollower
@@ -83,6 +84,7 @@ export const initTwitch = async () => {
                 if (lastFollowerFetched !== latestFollower) {
                     streamManager.setText('latestFollower', lastFollowerFetched)
                     streamManager.setText('totalFollowers', totalFollowers)
+                    sendEvent('follow',lastFollowerFetched)
                 }
             }
             catch (err) {
