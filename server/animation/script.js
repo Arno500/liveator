@@ -1,23 +1,37 @@
 const ws = new WebSocket('ws://localhost:42069')
 
-const content = document.querySelector('.content')
+const user = document.querySelector('.user')
+const action = document.querySelector('.action')
+const wrapper = document.querySelector('.wrapper')
+const userText = document.querySelectorAll('.userText > *')
 
 ws.addEventListener('message', (data) => {
-    console.log('Received message from server ')
+    console.log('Received message from server')
     const message = JSON.parse(data)
+    wrapper.classList.add('visible')
+    userText.forEach(text => {
+        text.textContent = message.user
+        setTimeout(() => {
+            text.classList.add('triggered')
+        }, 2000)
+    })
     switch (message.type) {
         case 'follow':
-            content.textContent = `${message.user} just followed the channel! 💖`
+            document.documentElement.style.setProperty('--text-color', '#AC9FFF');
+            action.textContent = 'just followed the channel! 💖'
             break;
         case 'subscribe':
-            content.textContent = `${message.user} just subscribed to the channel! 💖`
-            break;
-        case 'bits':
-            content.textContent = `${message.user} just donated ??? bits! 💖`
+            document.documentElement.style.setProperty('--text-color', '#FFB4C2');
+            action.textContent = 'just subscribed to the channel! 💖'
             break;
         default:
             console.error('Unknown message type', message)
             break;
     }
-    content.classList.remove('hidden')
+    setTimeout(() => {
+        userText.forEach(text => text.classList.remove('triggered'))
+    }, 4000)
+    setTimeout(() => {
+        wrapper.classList.remove('visible')
+    }, 6000)
 })

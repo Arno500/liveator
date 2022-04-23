@@ -1,8 +1,88 @@
-.hidden {
-    display: none;
+:root {
+    --text-color: #42368e;
+    --bar-color: rgb(70, 70, 70);
 }
 
-.content {
-    transform: rotate(45deg);
+body {
     font-family: 'Poppins', sans-serif;
+}
+
+.wrapper {
+    opacity: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: opacity 1s;
+}
+
+.visible {
+    opacity: 1;
+}
+
+.background {
+    padding: 40px;
+    padding-top: 60px;
+    background-color: white;
+    transform: skew(-7deg);
+}
+
+.antiskew {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: skew(7deg);
+}
+
+.userText {
+    position: relative;
+    color: var(--text-color);
+    font-size: 100px;
+    letter-spacing: 8px;
+    text-align: center;
+    line-height: 1.1;
+    padding-bottom: 15px;
+    word-break: break-all;
+}
+
+.userText .commonSpan {
+    position: absolute;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    top: 0;
+    left: 0;
+    transition: 1s;
+    transform: translate(0, 0);
+    height: 100%;
+}
+
+.spanBefore {
+    background-image: repeating-linear-gradient(45deg,
+            transparent 0,
+            transparent 2px,
+            var(--bar-color) 2px,
+            var(--bar-color) 4px);
+    z-index: -1;
+}
+
+.spanAfter {
+    background-image: repeating-linear-gradient(135deg,
+            transparent 0,
+            transparent 2px,
+            var(--bar-color) 2px,
+            var(--bar-color) 4px);
+}
+
+.spanBefore.triggered {
+    transform: translate(10px, 10px);
+}
+
+.spanAfter.triggered {
+    transform: translate(-10px, -10px);
+}
+
+
+.action {
+    font-size: 30px;
+    color: var(--text-color);
 }
