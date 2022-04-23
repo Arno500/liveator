@@ -1,13 +1,12 @@
 import { pipeline } from 'stream'
+import { join } from 'path'
 
-import treeKill from "tree-kill"
-import prism from '@arno500/prism-media'
 import { joinVoiceChannel, EndBehaviorType, VoiceConnectionStatus, entersState } from "@discordjs/voice"
 import { addExitCallback } from "catch-exit"
 
 import client from "./index.mjs"
-import { startFFPlay } from "./ffmpegStream.mjs"
 
+import { Worker, SHARE_ENV } from 'worker_threads'
 
 let channel
 
@@ -18,14 +17,16 @@ let refreshInterval = null
 const setupBot = async (connection, initialVoiceChannel) => {
     let voiceChannel = initialVoiceChannel
     if (refreshInterval) clearInterval(refreshInterval)
-    audioStreams.forEach(audioStream => treeKill(audioStream.ffplay.pid))
+    audioStreams.forEach(audioStream => {
+        audioStream.workerStream.postMessage("exit")
+    })
     const receiver = connection.receiver
     const stopUserFFplay = async userId => {
         if (!voiceChannel.members.has(userId)) {
             console.log(`${(await voiceChannel.guild.members.fetch(userId)).nickname} (${userId}) is not in the vocal anymore, killing the associated instance`)
             const audioStream = audioStreams.get(userId)
             try {
-                treeKill(audioStream.ffplay.pid)
+                audioStream.workerStream.postMessage("exit")
             } catch { }
             audioStreams.delete(userId)
         }
@@ -47,25 +48,19 @@ const setupBot = async (connection, initialVoiceChannel) => {
             }
         })
         audioStreams.set(userId, opusStream)
-        const bitstream = new prism.opus.OggLogicalBitstream({
-            opusHead: new prism.opus.OpusHead({
-                channelCount: 2,
-                sampleRate: 48000,
-                // preskip: 0,
-            }),
-            pageSizeControl: {
-                maxSegments: 1,
-            },
-            crc: true
+
+        const workerStream = new Worker(join(process.cwd(), './discord/audioWorker.mjs'), {
+            stdin: true,
+            env: SHARE_ENV 
         })
-        const ffplayInstance = await startFFPlay()
-        pipeline(opusStream, bitstream, ffplayInstance.stdin, (err) => {
+        pipeline(opusStream, workerStream.stdin, (err) => {
             if (err && err.code !== "ERR_STREAM_PREMATURE_CLOSE") {
                 console.error("Pipeline error: ", err.message)
+                workerStream.terminate()
             }
         })
         audioStreams.set(userId, {
-            ffplay: ffplayInstance
+            workerStream: workerStream
         })
     })
     connection.on(VoiceConnectionStatus.Disconnected, async () => {
@@ -78,7 +73,7 @@ const setupBot = async (connection, initialVoiceChannel) => {
             voiceChannel = await client.channels.fetch(connection.joinConfig.channelId)
             audioStreams.forEach((audioStream, key) => {
                 audioStreams.delete(key)
-                treeKill(audioStream.ffplay.pid)
+                audioStream.workerStream.postMessage("exit")
             })
             // Seems to be reconnecting to a new channel - ignore disconnect
         } catch (error) {
@@ -94,7 +89,7 @@ const setupBot = async (connection, initialVoiceChannel) => {
             })
             audioStreams.forEach((audioStream, key) => {
                 audioStreams.delete(key)
-                treeKill(audioStream.ffplay.pid)
+                audioStream.workerStream.postMessage("exit")
             })
             setupBot(newConnection, initialVoiceChannel)
         }
@@ -115,5 +110,7 @@ export async function startAudioCapture() {
 }
 
 addExitCallback(() => {
-    audioStreams.forEach(audioStream => treeKill(audioStream.ffplay.pid))
+    audioStreams.forEach(audioStream => {
+        audioStream.workerStream?.postMessage("exit")
+    })
 })
