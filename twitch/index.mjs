@@ -58,7 +58,7 @@ const getTagsInfo = async (tags) => {
         headers: getHeaders(),
         searchParams
     }).json()
-    return res.data.map(tag => ({ name: tag.localization_names['en-us'] }))
+    return res.data.map(tag => ({ name: tag.localization_names['fr-fr'] }))
 }
 
 export const initTwitch = async () => {
@@ -92,16 +92,18 @@ export const initTwitch = async () => {
     }, 1000)
     streamManager.on(StreamEvents.StreamStart, async () => {
         let streamInfo
-        try {
-            streamInfo = await getStreamInfo()
-        } catch (err) {
-            console.error('Error occured during stream information fetching', err)
+        if (!process.env.DRY) {
+            try {
+                streamInfo = await getStreamInfo()
+            } catch (err) {
+                console.error('Error occured during stream information fetching', err)
+            }
+            try {
+                streamInfo.tags = await getTagsInfo(streamInfo.tags)
+            } catch (err) {
+                console.error('Error occured during tags information fetching', err)
+            }
         }
-        try {
-            streamInfo.tags = await getTagsInfo(streamInfo.tags)
-        } catch (err) {
-            console.error('Error occured during tags information fetching', err)
-        }
-        streamStartEmbed(streamInfo)
+        await streamStartEmbed(streamInfo)
     })
 }

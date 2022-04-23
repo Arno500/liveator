@@ -17,5 +17,14 @@ async function startOBS() {
     }
 }
 
-await Promise.all([await startOBS(), !process.env.DISCORD_DISABLE && await initializeDiscord()])
+async function startDiscord() {
+    try {
+        await initializeDiscord()
+    } catch (err) {
+        console.error("Couldn't connect to Discord", err)
+        setTimeout(startDiscord, 1000)
+    }
+}
+
+await Promise.all([await startOBS(), !(process.env.DISCORD_DISABLE === "false") && await startDiscord()])
 initTwitch()
