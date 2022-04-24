@@ -46,7 +46,7 @@ const getStreamInfo = async () => {
     const res = await got.get('https://api.twitch.tv/helix/streams', {
         headers: getHeaders(),
         searchParams: {
-            user_id: process.env.TWITCH_ID
+            user_id: Number(process.env.TWITCH_ID)
         }
     }).json()
     return { title: res.data[0].title, username: res.data[0].user_name, game: res.data[0].game_name, viewers: res.data[0].viewer_count, thumbnail: res.data[0].thumbnail_url, startedAt: res.data[0].started_at, tags: res.data[0].tag_ids }
@@ -90,20 +90,23 @@ export const initTwitch = async () => {
             }
         }
     }, 1000)
-    streamManager.on(StreamEvents.StreamStart, async () => {
-        let streamInfo
-        if (!process.env.DRY) {
-            try {
-                streamInfo = await getStreamInfo()
-            } catch (err) {
-                console.error('Error occured during stream information fetching', err)
+    streamManager.on(StreamEvents.StreamStart, () => {
+        setTimeout(async () => {
+            let streamInfo
+            if (!(process.env.DRY === "true")) {
+                try {
+                    streamInfo = await getStreamInfo()
+                } catch (err) {
+                    console.error('Error occured during stream information fetching', err)
+                }
+                if (streamInfo.tags)
+                    try {
+                        streamInfo.tags = await getTagsInfo(streamInfo.tags)
+                    } catch (err) {
+                        console.error('Error occured during tags information fetching', err)
+                    }
             }
-            try {
-                streamInfo.tags = await getTagsInfo(streamInfo.tags)
-            } catch (err) {
-                console.error('Error occured during tags information fetching', err)
-            }
-        }
-        await streamStartEmbed(streamInfo)
+            await streamStartEmbed(streamInfo)
+        }, 5 * 60 * 1000)
     })
 }

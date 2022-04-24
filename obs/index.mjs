@@ -42,7 +42,7 @@ class StreamManager extends EventEmitter {
         } else if (this.up) return
         else {
             console.log("Starting stream")
-            if (process.env.DRY === "false" || process.env.DRY === false)
+            if (!(process.env.DRY === "true"))
                 await obs.call("StartStream")
             this.up = true
             this.emit(StreamEvents.StreamStart)
@@ -51,7 +51,7 @@ class StreamManager extends EventEmitter {
 
     async stopStream() {
         console.log("Stopping stream")
-        if (process.env.DRY === "false" || process.env.DRY === false)
+        if (!(process.env.DRY === "true"))
             await obs.call("StopStream")
         this.stopping = false
         this.up = false
