@@ -10,7 +10,7 @@ export const initWS = async () => {
   wss = new WebSocketServer({ port: 42069 })
   wss.on("connection", (ws) => {
     console.log("A WebSocket client has been connected")
-    lastConnection.close(1, "Only one connection is allowed")
+    if (lastConnection) lastConnection.close(4000, "Only one connection is allowed")
     lastConnection = ws
   })
   wss.on("close", () => console.warn("The WebSocket client previously connected has been disconnected"))
@@ -21,5 +21,6 @@ export const initWS = async () => {
 }
 
 export const sendEvent = (type, user) => {
-  lastConnection.send(JSON.stringify({ type, user }))
+  if (!lastConnection) throw new Error("No WebSocket client is connected")
+  return lastConnection.send(JSON.stringify({ type, user }))
 }

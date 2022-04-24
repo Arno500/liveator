@@ -28,5 +28,5 @@ async function startDiscord() {
 }
 
 await initWS()
-await Promise.all([await startOBS(), !(process.env.DISCORD_DISABLE === "false") && await startDiscord()])
+await Promise.all([await startOBS(), !(process.env.DISCORD_DISABLE === "true") && await startDiscord()])
 initTwitch()
