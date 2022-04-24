@@ -13,6 +13,7 @@ specifiers:
   libsodium-wrappers: ^0.7.10
   obs-websocket-js: ^5.0.0-beta.1
   tree-kill: ^1.2.2
+  ws: ^8.5.0
 
 dependencies:
   '@arno500/prism-media': 2.0.0-alpha.1
@@ -27,6 +28,7 @@ dependencies:
   libsodium-wrappers: 0.7.10
   obs-websocket-js: 5.0.0-beta.1
   tree-kill: 1.2.2
+  ws: 8.5.0
 
 packages:
 

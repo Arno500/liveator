@@ -4,6 +4,7 @@ import { initializeDiscord } from "./discord/index.mjs"
 
 import { initOBSRemote } from "./obs/index.mjs"
 import { initTwitch } from "./twitch/index.mjs"
+import { initWS } from "./server/index.mjs"
 
 dotEnvSetup()
 setupCatchExit()
@@ -26,5 +27,6 @@ async function startDiscord() {
     }
 }
 
-await Promise.all([await startOBS(), !(process.env.DISCORD_DISABLE === "false") && await startDiscord()])
+await initWS()
+await Promise.all([await startOBS(), !(process.env.DISCORD_DISABLE === "true") && await startDiscord()])
 initTwitch()

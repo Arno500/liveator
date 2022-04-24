@@ -1,6 +1,7 @@
 import got from 'got'
 import { streamStartEmbed } from '../discord/messages.mjs'
 import streamManager, { StreamEvents } from '../obs/index.mjs'
+import { sendEvent } from '../server/index.mjs'
 
 let accessToken
 let latestFollower
@@ -39,7 +40,8 @@ const getFollowersInfo = async () => {
             to_id: process.env.TWITCH_ID
         }
     }).json()
-    return { latestFollower: res.data[0].from_name, totalFollowers: res.total }
+    const date = new Date(res.data[0].followed_at)
+    return { latestFollower: res.data[0].from_name, totalFollowers: res.total, followedAt: date }
 }
 
 const getStreamInfo = async () => {
@@ -77,13 +79,18 @@ export const initTwitch = async () => {
         }
     }, 3600 * 24 * 1000)
     setInterval(async () => {
-        if (process.env.DRY || streamManager.up) {
+        if (process.env.DRY === "true" || streamManager.up) {
             try {
-                const { totalFollowers, latestFollower: lastFollowerFetched } = await getFollowersInfo()
+                const { totalFollowers, latestFollower: lastFollowerFetched, followedAt } = await getFollowersInfo()
                 if (lastFollowerFetched !== latestFollower) {
                     streamManager.setText('latestFollower', lastFollowerFetched)
                     streamManager.setText('totalFollowers', totalFollowers)
+                    const dateMinus2Sec = new Date(new Date().getTime() - 4000)
+                    if (latestFollower && followedAt >= dateMinus2Sec) {
+                        sendEvent('follow', lastFollowerFetched)
+                    }
                 }
+                latestFollower = lastFollowerFetched
             }
             catch (err) {
                 console.error('Error occured during followers\' information fetching', err)
