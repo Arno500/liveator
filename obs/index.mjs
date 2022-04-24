@@ -79,7 +79,7 @@ class StreamManager extends EventEmitter {
                         await obs.call("SetCurrentSceneTransition", { transitionName: process.env.OBS_STANDARD_TRANSITION_NAME })
                         clearTimeout(this._transitionTimer)
                         this._transitionTimer = null
-                    }, 300)
+                    }, 600)
                 }
             }, 100)
         }, Number(process.env.OBS_STREAMER_TRANSITION_DURATION))

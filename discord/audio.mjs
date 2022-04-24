@@ -6,7 +6,7 @@ import { joinVoiceChannel, EndBehaviorType, VoiceConnectionStatus, entersState }
 import { addExitCallback } from "catch-exit"
 
 import client from "./index.mjs"
-import { startFFPlay } from "./ffmpegStream.mjs"
+import { startMPV } from "./mpvStream.mjs"
 
 
 let channel
@@ -18,25 +18,25 @@ let refreshInterval = null
 const setupBot = async (connection, initialVoiceChannel) => {
     let voiceChannel = initialVoiceChannel
     if (refreshInterval) clearInterval(refreshInterval)
-    audioStreams.forEach(audioStream => treeKill(audioStream.ffplay.pid))
+    audioStreams.forEach(audioStream => treeKill(audioStream.mpv.pid))
     const receiver = connection.receiver
-    const stopUserFFplay = async userId => {
+    const stopUserMPV = async userId => {
         if (!voiceChannel.members.has(userId)) {
             console.log(`${(await voiceChannel.guild.members.fetch(userId)).nickname} (${userId}) is not in the vocal anymore, killing the associated instance`)
             const audioStream = audioStreams.get(userId)
             try {
-                treeKill(audioStream.ffplay.pid)
+                treeKill(audioStream.mpv.pid)
             } catch { }
             audioStreams.delete(userId)
         }
     }
-    receiver.speaking.on("end", stopUserFFplay)
+    receiver.speaking.on("end", stopUserMPV)
     refreshInterval = setInterval(() => audioStreams.forEach(async (audioStream, uid) => {
-        stopUserFFplay(uid)
+        stopUserMPV(uid)
     }), 1000)
     receiver.speaking.on('start', async (userId) => {
         audioStreams.forEach(async (audioStream, uid) => {
-            stopUserFFplay(uid)
+            stopUserMPV(uid)
         })
         if (audioStreams.has(userId)) {
             return
@@ -58,14 +58,14 @@ const setupBot = async (connection, initialVoiceChannel) => {
             },
             crc: true
         })
-        const ffplayInstance = await startFFPlay()
-        pipeline(opusStream, bitstream, ffplayInstance.stdin, (err) => {
+        const mpvInstance = await startMPV()
+        pipeline(opusStream, bitstream, mpvInstance.stdin, (err) => {
             if (err && err.code !== "ERR_STREAM_PREMATURE_CLOSE") {
                 console.error("Pipeline error: ", err.message)
             }
         })
         audioStreams.set(userId, {
-            ffplay: ffplayInstance
+            mpv: mpvInstance
         })
     })
     connection.on(VoiceConnectionStatus.Disconnected, async () => {
@@ -78,7 +78,7 @@ const setupBot = async (connection, initialVoiceChannel) => {
             voiceChannel = await client.channels.fetch(connection.joinConfig.channelId)
             audioStreams.forEach((audioStream, key) => {
                 audioStreams.delete(key)
-                treeKill(audioStream.ffplay.pid)
+                treeKill(audioStream.mpv.pid)
             })
             // Seems to be reconnecting to a new channel - ignore disconnect
         } catch (error) {
@@ -94,7 +94,7 @@ const setupBot = async (connection, initialVoiceChannel) => {
             })
             audioStreams.forEach((audioStream, key) => {
                 audioStreams.delete(key)
-                treeKill(audioStream.ffplay.pid)
+                treeKill(audioStream.mpv.pid)
             })
             setupBot(newConnection, initialVoiceChannel)
         }
@@ -115,5 +115,5 @@ export async function startAudioCapture() {
 }
 
 addExitCallback(() => {
-    audioStreams.forEach(audioStream => treeKill(audioStream.ffplay.pid))
+    audioStreams.forEach(audioStream => treeKill(audioStream.mpv.pid))
 })
