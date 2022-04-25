@@ -72,16 +72,11 @@ class StreamManager extends EventEmitter {
             this._transitionTimer = null
         } else await obs.call("SetCurrentSceneTransition", { transitionName: process.env.OBS_STREAMER_TRANSITION_NAME })
         this._transitionTimer = setTimeout(() => {
-            this._transitionTimer = setInterval(async () => {
-                if ((await obs.call("GetCurrentSceneTransition")).transitionConfigurable) {
-                    clearInterval(this._transitionTimer)
-                    this._transitionTimer = setTimeout(async () => {
-                        await obs.call("SetCurrentSceneTransition", { transitionName: process.env.OBS_STANDARD_TRANSITION_NAME })
-                        clearTimeout(this._transitionTimer)
-                        this._transitionTimer = null
-                    }, 600)
-                }
-            }, 100)
+            clearInterval(this._transitionTimer)
+            this._transitionTimer = setTimeout(async () => {
+                await obs.call("SetCurrentSceneTransition", { transitionName: process.env.OBS_STANDARD_TRANSITION_NAME })
+                this._transitionTimer = null
+            }, 1000)
         }, Number(process.env.OBS_STREAMER_TRANSITION_DURATION))
     }
 
