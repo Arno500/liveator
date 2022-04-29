@@ -251,6 +251,7 @@ async function setupStreamersInsideTemplates() {
         const posData = await obs.call("GetSceneItemTransform", { sceneItemId: placeholder.item.sceneItemId, sceneName: template.sceneName })
         await obs.call("SetSceneItemEnabled", { sceneName: template.sceneName, sceneItemId: placeholder.item.sceneItemId, sceneItemEnabled: false })
         const { sceneItemId } = await obs.call("CreateSceneItem", { sceneName: template.sceneName, sourceName: streamer.inputName })
+        await obs.call("SetSceneItemIndex", { sceneItemId, sceneName: template.sceneName, sceneItemIndex: placeholder.item.sceneItemIndex })
         // TODO: Or maybe move the item using the index of the placeholder?
         await obs.call("SetSceneItemTransform", {
             sceneItemId, sceneName: template.sceneName, sceneItemTransform: {
