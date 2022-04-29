@@ -27,7 +27,7 @@ class StreamManager extends EventEmitter {
         this.stopping = false
         this._stoppingTimeout = null
         this._sceneTimer = null
-        this._transitionTimer = null
+        this._waitingForStreamerTransition = false
     }
 
     async feedState() {
@@ -67,17 +67,14 @@ class StreamManager extends EventEmitter {
     }
 
     async _setTransitionForNewStreamer() {
-        if (this._transitionTimer) {
-            clearTimeout(this._transitionTimer)
-            this._transitionTimer = null
-        } else await obs.call("SetCurrentSceneTransition", { transitionName: process.env.OBS_STREAMER_TRANSITION_NAME })
-        this._transitionTimer = setTimeout(() => {
-            clearInterval(this._transitionTimer)
-            this._transitionTimer = setTimeout(async () => {
+        if (!this._waitingForStreamerTransition) {
+            this._waitingForStreamerTransition = true
+            await obs.call("SetCurrentSceneTransition", { transitionName: process.env.OBS_STREAMER_TRANSITION_NAME })
+            obs.once("SceneTransitionEnded", async () => {
                 await obs.call("SetCurrentSceneTransition", { transitionName: process.env.OBS_STANDARD_TRANSITION_NAME })
-                this._transitionTimer = null
-            }, 1000)
-        }, Number(process.env.OBS_STREAMER_TRANSITION_DURATION))
+                this._waitingForStreamerTransition = false
+            })
+        } 
     }
 
     /**
@@ -238,6 +235,7 @@ function findAvailableScenes() {
 }
 
 function getPlaceholdersWithStreamers(placeholders, streamers) {
+    // TODO: Bad logic, needs to fix that, maybe
     const sortedPlaceholdersByPosition = [...placeholders].sort((a, b) => a.item.sceneItemIndex - b.item.sceneItemIndex)
     const sortedPlaceholdersByIndex = [...placeholders].sort((a, b) => a.index - b.index)
     return sortedPlaceholdersByPosition.map(placeholder => ({
@@ -253,6 +251,7 @@ async function setupStreamersInsideTemplates() {
         const posData = await obs.call("GetSceneItemTransform", { sceneItemId: placeholder.item.sceneItemId, sceneName: template.sceneName })
         await obs.call("SetSceneItemEnabled", { sceneName: template.sceneName, sceneItemId: placeholder.item.sceneItemId, sceneItemEnabled: false })
         const { sceneItemId } = await obs.call("CreateSceneItem", { sceneName: template.sceneName, sourceName: streamer.inputName })
+        // TODO: Or maybe move the item using the index of the placeholder?
         await obs.call("SetSceneItemTransform", {
             sceneItemId, sceneName: template.sceneName, sceneItemTransform: {
                 ...posData.sceneItemTransform,
