@@ -1,13 +1,9 @@
-import { WebSocketServer } from 'ws'
+import { WebSocket, WebSocketServer } from 'ws'
 
 /**
  * @type {WebSocket.WebSocketServer}
  */
 let wss
-/**
- * @type {WebSocket.Websocket}
- */
-let lastConnection
 
 export const initWS = async () => {
   wss = new WebSocketServer({ port: 42069 })
