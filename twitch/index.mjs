@@ -1,5 +1,5 @@
 import got from 'got'
-import { streamStartEmbed } from '../discord/messages.mjs'
+import { streamStartEmbed, streamStartStatus, streamStopStatus } from '../discord/messages.mjs'
 import streamManager, { StreamEvents } from '../obs/index.mjs'
 import { sendEvent } from '../server/index.mjs'
 
@@ -100,20 +100,25 @@ export const initTwitch = async () => {
     streamManager.on(StreamEvents.StreamStart, () => {
         setTimeout(async () => {
             let streamInfo
+            streamStartStatus()
             if (!(process.env.DRY === "true")) {
                 try {
                     streamInfo = await getStreamInfo()
                 } catch (err) {
                     console.error('Error occured during stream information fetching', err)
                 }
-                if (streamInfo.tags)
+                if (streamInfo.tags){
                     try {
                         streamInfo.tags = await getTagsInfo(streamInfo.tags)
                     } catch (err) {
                         console.error('Error occured during tags information fetching', err)
                     }
+                }
             }
             await streamStartEmbed(streamInfo)
         }, 5 * 60 * 1000)
+    })
+    streamManager.on(StreamEvents.StreamStop, () => {
+        streamStopStatus()
     })
 }
