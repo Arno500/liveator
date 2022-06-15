@@ -1,5 +1,5 @@
 import got from 'got'
-import { streamStartEmbed } from '../discord/messages.mjs'
+import { streamStartEmbed, streamStartStatus, streamStopStatus } from '../discord/messages.mjs'
 import streamManager, { StreamEvents } from '../obs/index.mjs'
 import { sendEvent } from '../server/index.mjs'
 
@@ -99,6 +99,7 @@ export const initTwitch = async () => {
     }, 1000)
     streamManager.on(StreamEvents.StreamStart, async () => {
         let streamInfo
+        streamStartStatus()
         if (!process.env.DRY) {
             try {
                 streamInfo = await getStreamInfo()
@@ -112,5 +113,8 @@ export const initTwitch = async () => {
             }
         }
         await streamStartEmbed(streamInfo)
+    })
+    streamManager.on(StreamEvents.StreamStop, () => {
+        streamStopStatus()
     })
 }
