@@ -97,7 +97,7 @@ export const initTwitch = async () => {
             }
         }
     }, 1000)
-    streamManager.on(StreamEvents.StreamStart, () => {
+    streamManager.on(StreamEvents.StreamStart, async () => {
         setTimeout(async () => {
             let streamInfo
             streamStartStatus()
