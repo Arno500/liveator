@@ -20,3 +20,19 @@ export const streamStartEmbed = async (streamInfo = { title: "Fake stream", user
         channel.send({ embeds: [streamStartMessage] })
     }
 }
+
+export const streamStartStatus = () => {
+    client.user.setActivity('🔴 Streaming', { type: 'STREAMING', url: 'https://twitch.tv/bendoootv' })
+}
+
+export const streamStopStatus = () => {
+    client.user.setPresence({ activity: null })
+}
+
+export const streamStartStatus = () => {
+    client.user.setActivity('🔴 Streaming', { type: 'STREAMING', url: 'https://twitch.tv/bendoootv' })
+}
+
+export const streamStopStatus = () => {
+    client.user.setPresence({ activity: null })
+}
