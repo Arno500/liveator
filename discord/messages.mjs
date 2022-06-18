@@ -28,11 +28,3 @@ export const streamStartStatus = () => {
 export const streamStopStatus = () => {
     client.user.setPresence({ activity: null })
 }
-
-export const streamStartStatus = () => {
-    client.user.setActivity('🔴 Streaming', { type: 'STREAMING', url: 'https://twitch.tv/bendoootv' })
-}
-
-export const streamStopStatus = () => {
-    client.user.setPresence({ activity: null })
-}
