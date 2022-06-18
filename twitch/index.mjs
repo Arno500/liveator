@@ -98,21 +98,23 @@ export const initTwitch = async () => {
         }
     }, 1000)
     streamManager.on(StreamEvents.StreamStart, async () => {
-        let streamInfo
-        streamStartStatus()
-        if (!process.env.DRY) {
-            try {
-                streamInfo = await getStreamInfo()
-            } catch (err) {
-                console.error('Error occured during stream information fetching', err)
+        setTimeout(async () => {
+            let streamInfo
+            streamStartStatus()
+            if (!(process.env.DRY === "true")) {
+                try {
+                    streamInfo = await getStreamInfo()
+                } catch (err) {
+                    console.error('Error occured during stream information fetching', err)
+                }
+                try {
+                    streamInfo.tags = await getTagsInfo(streamInfo.tags)
+                } catch (err) {
+                    console.error('Error occured during tags information fetching', err)
+                }
             }
-            try {
-                streamInfo.tags = await getTagsInfo(streamInfo.tags)
-            } catch (err) {
-                console.error('Error occured during tags information fetching', err)
-            }
-        }
-        await streamStartEmbed(streamInfo)
+            await streamStartEmbed(streamInfo)
+        }, 5 * 60 * 1000)
     })
     streamManager.on(StreamEvents.StreamStop, () => {
         streamStopStatus()
