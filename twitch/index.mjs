@@ -79,7 +79,7 @@ export const initTwitch = async () => {
         }
     }, 3600 * 24 * 1000)
     setInterval(async () => {
-        if (process.env.DRY === "true" || streamManager.up) {
+        if (streamManager.up) {
             try {
                 const { totalFollowers, latestFollower: lastFollowerFetched, followedAt } = await getFollowersInfo()
                 if (lastFollowerFetched !== latestFollower) {

@@ -5,6 +5,7 @@ import { initializeDiscord } from "./discord/index.mjs"
 import { initOBSRemote } from "./obs/index.mjs"
 import { initTwitch } from "./twitch/index.mjs"
 import { initWS } from "./server/index.mjs"
+import { startDNScheck } from "./dns/index.mjs"
 
 dotEnvSetup()
 setupCatchExit()
@@ -28,5 +29,8 @@ async function startDiscord() {
 }
 
 await initWS()
+startDNScheck();
 await Promise.all([await startOBS(), !(process.env.DISCORD_DISABLE === "true") && await startDiscord()])
-initTwitch()
+if (process.env.TWITCH_CLIENT) {
+    initTwitch()
+}
