@@ -1,10 +1,10 @@
-import { MessageEmbed } from 'discord.js'
+import { EmbedBuilder } from 'discord.js'
 import client from "./index.mjs"
 
 export const streamStartEmbed = async (streamInfo = { title: "Fake stream", username: "BendoooTV", game: "Dry-mode stream notification", tags: ["Test 1", "Test 2"], thumbnail: "https://dummyimage.com/{width}x{height}/000/fff&text=Miniature+de+stream", startedAt: new Date().getTime(), viewers: 999 }) => {
     const url = `https://twitch.tv/${streamInfo.username}`
 
-    const streamStartMessage = new MessageEmbed()
+    const streamStartMessage = new EmbedBuilder()
         .setColor(Math.round(Math.random()) === 0 ? '#AC9FFF' : '#FFB4C2')
         .setTitle(streamInfo.title)
         .setURL(url)
